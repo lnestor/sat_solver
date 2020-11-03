@@ -7,6 +7,7 @@ class Clause():
 
     def __init__(self, literals):
         self._assign_literal_dict(literals)
+        self.atoms = self.literals.keys()
 
     def check(self, assignments):
         for atom, literals in self.literals.items():
