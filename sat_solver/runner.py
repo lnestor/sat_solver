@@ -1,4 +1,5 @@
 import random
+from .stack_frame import StackFrame
 
 class Runner():
     """
@@ -8,22 +9,69 @@ class Runner():
     """
 
     def __init__(self, clauses, atoms):
-        self._clauses = clauses
-        self._atoms = atoms
-        self._atom_stack = []
+        self.clauses = clauses
+        self.unassigned_atoms = atoms
+        self.assigned_atoms = []
+        self.stack = []
+        self.atom_assignments = {}
+        # This function below maps atoms to clauses, but we can probably know this earlier when
+        # clauses are added to the solver. Should we move this functionality up to the solver?
+        # Then the solver would maintain a list of atoms -> clause relationships
+        self._assign_atom_appearances(atoms, clauses)
 
     def run(self):
-        while True:
-            atom = self._get_atom()
-            self._atom_stack.push(atom)
+        """Runs a DFS to find input patterns that satisfy the clauses given"""
+        first_atom = self._get_next_atom(0)
+        self.stack.append(StackFrame(first_atom, {}, 0))
 
-            assignment = random.choice([True, False])
+        while len(self.stack) > 0:
+            frame = self.stack.pop()
+            next_atom = self._get_next_atom(frame.depth + 1)
 
-    def _get_atom(self):
-        """
-        Extracts the next atom to assign a value to.
-        The current implementation chooses randomly.
-        """
-        atom = random.sample(self._atoms, 1)[0]
-        self._atoms.remove(atom)
-        return atom
+            if frame.atom is not None:
+                next_assignments = [True, False]
+                random.shuffle(next_assignments)
+
+                for assignment in next_assignments:
+                    new_assignments = frame.assignments.copy()
+                    new_assignments[frame.atom] = assignment
+
+                    next_frame = StackFrame(next_atom, new_assignments, frame.depth + 1)
+                    self.stack.append(next_frame)
+            else:
+                # No more atoms to assign, check if it works
+                assignments = frame.assignments
+                satisfied = self._check_satisfiability(assignments)
+
+                if satisfied:
+                    return True
+
+        # No satisfiable pattern was found
+        return False
+
+    def _get_next_atom(self, frame_depth):
+        """Extracts the next atom to assign a value to. The current implementation chooses randomly."""
+        if len(self.assigned_atoms) > frame_depth:
+            return self.assigned_atoms[frame_depth]
+        elif len(self.unassigned_atoms) == 0:
+            return None
+        else:
+            atom = random.sample(self.unassigned_atoms, 1)[0]
+            self.unassigned_atoms.remove(atom)
+            self.assigned_atoms.append(atom)
+            return atom
+
+    def _check_satisfiability(self, assignments):
+        """Checks if the assignments passed in satisfy the clauses"""
+        clause_satisfies = [c.check(assignments) for c in self.clauses]
+        return not (False in clause_satisfies)
+
+    def _assign_atom_appearances(self, atoms, clauses):
+        self.atom_appearances = {}
+
+        for atom in atoms:
+            self.atom_appearances[atom] = []
+
+            for clause in clauses:
+                if atom in clause:
+                    self.atom_appearances[atom].append(clause)

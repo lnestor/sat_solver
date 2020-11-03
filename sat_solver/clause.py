@@ -7,33 +7,17 @@ class Clause():
 
     def __init__(self, literals):
         self._assign_literal_dict(literals)
-        self.is_satisfied = False
-        self.still_satisfiable = True
-        self.assigned_atom_count = 0
 
-    def update(self, atom, atom_value):
-        """
-        Updates the values of an atom in this clause. Also assigns flags indicating this clause is
-        satisfied (one literal is True) or unsatisfiable (all literals are False)
-        """
-        if self.is_satisfied:
-            return
+    def check(self, assignments):
+        for atom, literals in self.literals.items():
+            if atom in assignments:
+                literal_values = [l.value(assignments[atom]) for l in literals]
 
-        self._assign_literal_values(atom, atom_value)
+                if True in literal_values:
+                    return True
 
-        self.assigned_atom_count += 1
-        if self.assigned_atom_count == len(self.literals.keys()):
-            self.still_satisfiable = False
-
-    def _assign_literal_values(self, atom, atom_value):
-        changed_literals = self.literals[atom]
-
-        for literal in changed_literals:
-            literal_value = literal.assign_atom_value(atom_value)
-
-            if literal_value:
-                self.is_satisfied = True
-
+        # No literals were true
+        return False
 
     def _assign_literal_dict(self, literals):
         if len(literals) == 0:
@@ -48,3 +32,5 @@ class Clause():
             else:
                 self.literals[atom] = [lit]
 
+    def __contains__(self, atom):
+        return atom in self.literals.keys()

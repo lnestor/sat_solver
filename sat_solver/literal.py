@@ -7,11 +7,9 @@ class Literal():
     def __init__(self, atom, negated = False):
         self.atom = atom
         self.negated = negated
-        self.value = None
 
-    def assign_atom_value(self, value):
-        self.value = value ^ self.negated
-        return self.value
+    def value(self, atom_assignment):
+        return atom_assignment ^ self.negated
 
     def __str__(self):
         if self.negated:
