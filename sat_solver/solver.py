@@ -1,4 +1,4 @@
-from .runner import Runner
+from .naive_runner import NaiveRunner
 
 class Solver():
     def __init__(self):
@@ -6,8 +6,8 @@ class Solver():
         self.atoms = set()
         self.runner = None
 
-    def check(self):
-        self.runner = Runner(self.clauses, self.atoms)
+    def check(self, runner_cls = NaiveRunner):
+        self.runner = runner_cls(self.clauses, self.atoms)
 
         sat = self.runner.run()
 

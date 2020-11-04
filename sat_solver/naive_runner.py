@@ -1,7 +1,7 @@
 import random
 from .stack_frame import StackFrame
 
-class Runner():
+class NaiveRunner():
     """
     Class to perform the SAT solving algorithm. This class will
     perform a single instance of the algorithm, while the Solver
