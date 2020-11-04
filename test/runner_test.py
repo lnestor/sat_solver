@@ -47,3 +47,26 @@ def test_run_when_satisfiable_with_many_inputs_returns_true():
     runner = Runner([clause1, clause2, clause3], [a, b, c, d, e])
 
     assert runner.run() == True
+
+def test_extract_returns_valid_model():
+    a = Bool("a")
+    lit = Literal(a, negated = False)
+    clause = Clause([lit])
+
+    runner = Runner([clause], [a])
+    runner.run()
+
+    assert runner.extract() == {a: True}
+
+def test_extract_when_not_satisfiable_raises():
+    a = Bool("a")
+    lit = Literal(a, negated = False)
+    lit_bar = Literal(a, negated = True)
+    clause = Clause([lit])
+    clause_bar = Clause([lit_bar])
+
+    runner = Runner([clause, clause_bar], [a])
+    runner.run()
+
+    with pytest.raises(RuntimeError):
+        runner.extract()

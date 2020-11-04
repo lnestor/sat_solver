@@ -18,6 +18,7 @@ class Runner():
         # clauses are added to the solver. Should we move this functionality up to the solver?
         # Then the solver would maintain a list of atoms -> clause relationships
         self._assign_atom_appearances(atoms, clauses)
+        self.model = None
 
     def run(self):
         """Runs a DFS to find input patterns that satisfy the clauses given"""
@@ -44,10 +45,17 @@ class Runner():
                 satisfied = self._check_satisfiability(assignments)
 
                 if satisfied:
+                    self.model = assignments
                     return True
 
         # No satisfiable pattern was found
         return False
+
+    def extract(self):
+        if self.model is not None:
+            return self.model
+        else:
+            raise
 
     def _get_next_atom(self, frame_depth):
         """Extracts the next atom to assign a value to. The current implementation chooses randomly."""
