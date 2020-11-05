@@ -39,3 +39,12 @@ def test_check_when_not_fully_defined_returns_true():
 
     assert clause.check(assignment) == True
 
+def test_str():
+    a = Bool("a")
+    b = Bool("b")
+    lit_a = Literal(a, negated = False)
+    lit_b = Literal(b, negated = False)
+    clause = Clause([lit_a, lit_b])
+
+    assert str(clause) == "(a or b)"
+

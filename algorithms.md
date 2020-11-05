@@ -57,3 +57,5 @@ while stack is not empty:
 5. Repeat until no variables left
 
 # Algorithm 3: Unit propagation
+
+Do the same as algorithm 2, but do the double watched literal thing
