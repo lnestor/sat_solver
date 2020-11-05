@@ -16,6 +16,9 @@ class Clause():
 
                 if True in literal_values:
                     return True
+            else:
+                # Not all atoms have been assigned yet
+                return True
 
         # No literals were true
         return False
