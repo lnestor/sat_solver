@@ -50,14 +50,17 @@ def test_check_when_satisfiable_with_many_inputs_returns_true():
 
 def test_model_returns_valid_model():
     a = Bool("a")
-    lit = Literal(a, negated = False)
-    clause = Clause([lit])
+    b = Bool("b")
+    lit_a = Literal(a, negated = False)
+    lit_b = Literal(b, negated = True)
+    clause_a = Clause([lit_a])
+    clause_b = Clause([lit_b])
 
-    runner = Algorithm1Runner([clause], [a])
+    runner = Algorithm1Runner([clause_a, clause_b], [a, b])
     runner.check()
 
     model = runner.model()
-    assert model == {a: True}
+    assert model == {a: True, b: False}
 
 def test_model_when_not_satisfiable_raises():
     a = Bool("a")

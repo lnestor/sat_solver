@@ -1,5 +1,6 @@
 import random
-from .stack_frame import StackFrame
+
+from .satisfy_status import SatisfyStatus
 
 class Algorithm2Runner():
     """Class to perform a pruning-based DFS based SAT solving algorithm
@@ -13,6 +14,7 @@ class Algorithm2Runner():
     The satisfiability is checked by querying each clause on every assignment.
     This is not efficient because clauses do not need to be queried unless they
     have only one literal unassigned. This will be addressed in algorithm 3.
+
     """
 
     def __init__(self, clauses, atoms):
@@ -23,107 +25,66 @@ class Algorithm2Runner():
             atoms: A list of the atoms in the formula.
 
         """
-        self.clauses = clauses.copy()
-        self.unassigned_atoms = atoms.copy()
-        self.assigned_atoms = []
-        self.stack = []
-        self.model = None
+        self.clauses = clauses
+        self.initial_atoms = atoms
+        self._model = None
 
-    def run(self):
-        """Runs a modified DFS to find input patterns that satisfy the clauses given.
+    def check(self):
+        """Runs a DFS to find input patterns that satisfy the clauses given.
 
         Returns:
             bool: True if the formula is satisfiable, False otherwise
 
         """
-        first_atom = self._get_next_atom(0)
-        self.stack.append(StackFrame(first_atom, {}, 0))
+        return self._run(self.initial_atoms, {})
 
-        while len(self.stack) > 0:
-            frame = self.stack.pop()
-            assignments = frame.assignments
-
-            # Check if this is still satisfiable
-            # If it is not, this path cannot exist
-            satisfiable = self._check_satisfiability(assignments)
-
-            if satisfiable:
-                if frame.atom is not None:
-                    next_atom = self._get_next_atom(frame.depth + 1)
-                    self._switch_on_atom(next_atom, frame)
-                else:
-                    # Assignments all work, return
-                    self.model = assignments
-                    return True
-
-        # No satisfiable pattern was found
-        return False
-
-    def extract(self):
+    def model(self):
         """Get an input pattern that satisfies the CNF formula.
 
         Returns:
             dict: Atom assignments in the form of {atom: value}
 
         """
-        if self.model is not None:
-            return self.model
-        else:
+        if self._model == None:
             raise
 
-    def _switch_on_atom(self, next_atom, old_frame):
-        """Branch on an atom being assigned true or false.
+        return self._model
+
+    def _run(self, atoms, model):
+        """The recursive DFS work function.
+
+        This is the function that actually performs the DFS. It is called
+        recursively to perform the search.
 
         Args:
-            next_atom: The next atom to be assigned. Note that this
-                is not the same as the current atom being branched.
-            old_frame: The previous stack frame of the DFS algorithm.
-
-        """
-        next_assignments = [True, False]
-        random.shuffle(next_assignments)
-
-        for assignment in next_assignments:
-            new_assignments = old_frame.assignments.copy()
-            new_assignments[old_frame.atom] = assignment
-
-            next_frame = StackFrame(next_atom, new_assignments, old_frame.depth + 1)
-            self.stack.append(next_frame)
-
-    def _get_next_atom(self, frame_depth):
-        """Chooses the next atom to assign a value to.
-
-        The current implementation chooses randomly. Other implementations are possible.
-
-        Args:
-            frame_depth: the depth of the current frame in the search tree
+            atoms: the remaining atoms that have not been assigned
+            model: the current model of already assigned atoms
 
         Returns:
-            atom: The next atom to be explored.
+            bool: True if the formula is satisfiable with the given model
 
         """
-        if len(self.assigned_atoms) > frame_depth:
-            return self.assigned_atoms[frame_depth]
-        elif len(self.unassigned_atoms) == 0:
-            return None
+        clause_statuses = [c.check(model) for c in self.clauses]
+
+        if all([status == SatisfyStatus.Satisfied for status in clause_statuses]):
+            self._model = model
+            return True
+
+        if any([status == SatisfyStatus.Unsatisfied for status in clause_statuses]):
+            return False
+
+        if len(atoms) > 0:
+            to_explore = random.sample(atoms, 1)[0]
+
+            new_atoms = atoms.copy()
+            new_atoms.remove(to_explore)
+
+            new_model_true = model.copy()
+            new_model_false = model.copy()
+            new_model_true[to_explore] = True
+            new_model_false[to_explore] = False
+
+            return (self._run(new_atoms, new_model_true) or
+                    self._run(new_atoms, new_model_false))
         else:
-            atom = random.sample(self.unassigned_atoms, 1)[0]
-            self.unassigned_atoms.remove(atom)
-            self.assigned_atoms.append(atom)
-            return atom
-
-    def _check_satisfiability(self, assignments):
-        """Checks if the formula is still satisfiable.
-
-        Note that this does not check if the formula is satisfied, only
-        if it can be satisfied in the future.
-
-        Args:
-            assignments: dict of boolean assignments in the form of {atom: value}
-
-        Returns:
-            bool: True if the formula is still satsifiable, False otherwise
-
-        """
-        clause_satisfies = [c.check(assignments) for c in self.clauses]
-        return not (False in clause_satisfies)
+            return False

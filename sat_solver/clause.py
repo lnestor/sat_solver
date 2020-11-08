@@ -1,3 +1,5 @@
+from .satisfy_status import SatisfyStatus
+
 class Clause():
     """Class representing a disjunction of some literals.
 
@@ -15,17 +17,21 @@ class Clause():
         self._assign_literal_dict(literals)
         self.atoms = self.literals.keys()
 
-    def is_satisfied(self, model):
-        """Check fi the clause is completely satisfied by a model.
+    def check(self, model):
+        """Check the current status of the clause given a model.
 
-        A clause is satisfied if at least one of its literals is true.
+        A clause in "pending" if no literals are true but some are unassigned.
+        A clause is "satisfied" if at least one of its literals is true.
+        A clause in "unsatisfied" if all of its literals are false.
 
         Args:
             model: dict with assignments of boolean variables in the form
-                {atom: true value}
+                of {atom: truth value}
 
         Returns:
-            bool: True if completely satisfied, False otherwise
+            enum: SatisfyStatus.Pending if the clause is pending
+                SatisfyStatus.Satisfied if the clause is satisfied
+                SatisfyStatus.Unsatisfied if the clause is unsatisfied
 
         """
         for atom, literals in self.literals.items():
@@ -33,36 +39,11 @@ class Clause():
                 literal_values = [l.value(model[atom]) for l in literals]
 
                 if True in literal_values:
-                    return True
-
-        return False
-
-    def check(self, assignments):
-        """Check if the clause is satisfiable with some assignments
-
-        A clause is satisfiable if at least one of its literals is true (in which
-        case it is satisfied) or at least one of its literals is unassigned. A
-        clause is not satisfiable if all of its literals are false.
-
-        Args:
-            assignments: dictionary in the form {atom: truth value}
-
-        Returns:
-            bool: True if satisfiable, False otherwise
-
-        """
-        for atom, literals in self.literals.items():
-            if atom in assignments:
-                literal_values = [l.value(assignments[atom]) for l in literals]
-
-                if True in literal_values:
-                    return True
+                    return SatisfyStatus.Satisfied
             else:
-                # Not all atoms have been assigned yet
-                return True
+                return SatisfyStatus.Pending
 
-        # No literals were true
-        return False
+        return SatisfyStatus.Unsatisfied
 
     def _assign_literal_dict(self, literals):
         """Initialize the dictionary from atom to literal.

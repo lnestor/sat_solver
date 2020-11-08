@@ -1,5 +1,7 @@
 import random
 
+from .satisfy_status import SatisfyStatus
+
 class Algorithm1Runner():
     """Class to perform a DFS based SAT solving algorithm.
 
@@ -63,8 +65,8 @@ class Algorithm1Runner():
             bool: True if the formula is satisfiable with the given model
 
         """
-        satisfied = [c.is_satisfied(model) for c in self.clauses]
-        if not (False in satisfied):
+        clause_statuses = [c.check(model) for c in self.clauses]
+        if all([status == SatisfyStatus.Satisfied for status in clause_statuses]):
             self._model = model
             return True
 
