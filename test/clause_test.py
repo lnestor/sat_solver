@@ -10,6 +10,24 @@ def test_when_given_zero_literals_raises():
     with pytest.raises(ValueError):
         clause = Clause([])
 
+def test_satisfied_when_satisfied_returns_true():
+    a = Bool("a")
+    lit = Literal(a, negated = False)
+    clause = Clause([lit])
+    model = {a: True}
+
+    value = clause.is_satisfied(model)
+    assert value == True
+
+def test_satisfied_when_not_satisfied_returns_false():
+    a = Bool("a")
+    lit = Literal(a, negated = False)
+    clause = Clause([lit])
+    model = {a: False}
+
+    value = clause.is_satisfied(model)
+    assert value == False
+
 def test_check_when_satisfiable_returns_true():
     a = Bool("a")
     lit = Literal(a, negated = False)

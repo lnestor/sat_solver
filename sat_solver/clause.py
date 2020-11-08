@@ -15,6 +15,28 @@ class Clause():
         self._assign_literal_dict(literals)
         self.atoms = self.literals.keys()
 
+    def is_satisfied(self, model):
+        """Check fi the clause is completely satisfied by a model.
+
+        A clause is satisfied if at least one of its literals is true.
+
+        Args:
+            model: dict with assignments of boolean variables in the form
+                {atom: true value}
+
+        Returns:
+            bool: True if completely satisfied, False otherwise
+
+        """
+        for atom, literals in self.literals.items():
+            if atom in model:
+                literal_values = [l.value(model[atom]) for l in literals]
+
+                if True in literal_values:
+                    return True
+
+        return False
+
     def check(self, assignments):
         """Check if the clause is satisfiable with some assignments
 
