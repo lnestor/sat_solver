@@ -32,13 +32,34 @@ def test_check_when_not_satisfiable_returns_unsatisfied():
 def test_check_when_not_fully_defined_returns_pending():
     a = Bool("a")
     b = Bool("b")
+    c = Bool("c")
+    lit_a = Literal(a, negated = False)
+    lit_b = Literal(b, negated = False)
+    lit_c = Literal(c, negated = False)
+    clause = Clause([lit_a, lit_b, lit_c])
+    model = {a: False}
+
+    value = clause.check(model)
+    assert value == SatisfyStatus.Pending
+
+def test_check_when_unit_returns_unit():
+    a = Bool("a")
+    b = Bool("b")
     lit_a = Literal(a, negated = False)
     lit_b = Literal(b, negated = False)
     clause = Clause([lit_a, lit_b])
     model = {a: False}
 
     value = clause.check(model)
-    assert value == SatisfyStatus.Pending
+    assert value == SatisfyStatus.Unit
+
+def test_literal_returns_associated_literals():
+    a = Bool("a")
+    lit = Literal(a, negated = False)
+    clause = Clause([lit])
+
+    literal = clause.literal(a)
+    assert literal == [lit]
 
 def test_str():
     a = Bool("a")

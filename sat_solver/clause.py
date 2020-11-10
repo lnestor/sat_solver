@@ -20,9 +20,11 @@ class Clause():
     def check(self, model):
         """Check the current status of the clause given a model.
 
-        A clause in "pending" if no literals are true but some are unassigned.
+        A clause is "pending" if no literals are true but some are unassigned.
         A clause is "satisfied" if at least one of its literals is true.
-        A clause in "unsatisfied" if all of its literals are false.
+        A clause is "unsatisfied" if all of its literals are false.
+        A clause is "unit" if all of its literals are false except one, which
+            is unassigned.
 
         Args:
             model: dict with assignments of boolean variables in the form
@@ -32,8 +34,10 @@ class Clause():
             enum: SatisfyStatus.Pending if the clause is pending
                 SatisfyStatus.Satisfied if the clause is satisfied
                 SatisfyStatus.Unsatisfied if the clause is unsatisfied
+                SatisfyStatus.Unit if the clause is unit
 
         """
+        unassigned_count = 0
         for atom, literals in self.literals.items():
             if atom in model:
                 literal_values = [l.value(model[atom]) for l in literals]
@@ -41,9 +45,17 @@ class Clause():
                 if True in literal_values:
                     return SatisfyStatus.Satisfied
             else:
-                return SatisfyStatus.Pending
+                unassigned_count += 1
 
-        return SatisfyStatus.Unsatisfied
+        if unassigned_count == 1:
+            return SatisfyStatus.Unit
+        elif unassigned_count > 1:
+            return SatisfyStatus.Pending
+        else:
+            return SatisfyStatus.Unsatisfied
+
+    def literal(self, atom):
+        return self.literals[atom]
 
     def _assign_literal_dict(self, literals):
         """Initialize the dictionary from atom to literal.

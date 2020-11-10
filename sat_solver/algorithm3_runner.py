@@ -1,6 +1,7 @@
 import random
 
 from .satisfy_status import SatisfyStatus
+from .unit_propagator import UnitPropagator
 
 class Algorithm3Runner():
     """Class to perform a unit-propagation DFS based SAT solving algorithm
@@ -30,6 +31,7 @@ class Algorithm3Runner():
         self.clauses = clauses
         self.initial_atoms = atoms
         self._model = None
+        self._propagator = UnitPropagator(clauses)
 
     def check(self):
         """Runs a DFS to find input patterns that satisfy the clauses given.
@@ -38,7 +40,7 @@ class Algorithm3Runner():
             bool: True if the formula is satisfiable, False otherwise
 
         """
-        return self._run(self.initial_atoms, {})
+        return self._run(self.initial_atoms, {}, None)
 
     def model(self):
         """Get an input pattern that satisfies the CNF formula.
@@ -52,7 +54,7 @@ class Algorithm3Runner():
 
         return self._model
 
-    def _run(self, atoms, model):
+    def _run(self, atoms, model, prev_atom):
         """The recursive DFS work function.
 
         This is the function that actually performs the DFS. It is called
@@ -61,6 +63,7 @@ class Algorithm3Runner():
         Args:
             atoms: the remaining atoms that have not been assigned
             model: the current model of already assigned atoms
+            prev_atom: the latest atom that was assigned
 
         Returns:
             bool: True if the formula is satisfiable with the given model
@@ -75,12 +78,15 @@ class Algorithm3Runner():
         if any([status == SatisfyStatus.Unsatisfied for status in clause_statuses]):
             return False
 
-        # Perhaps have a "watched clause" class that holds a clause and also
-        # The watched literals. Then we can only pass down the clauses we need to
-        # and add the list of clauses as an argument to the function. Maybe make
-        # the same change to algorithms 1 & 2
-        # If there exists a unit clause {p}
-            # recursively call
+        unit_atom, value = self._propagator.inspect(atoms, model, prev_atom)
+        if unit_atom is not None:
+            new_atoms = atoms.copy()
+            new_atoms.remove(unit_atom)
+
+            new_model = model.copy()
+            new_model[unit_atom] = value
+
+            return self._run(new_atoms, new_mode, unit_atom)
 
         if len(atoms) > 0:
             to_explore = random.sample(atoms, 1)[0]
@@ -93,7 +99,7 @@ class Algorithm3Runner():
             new_model_true[to_explore] = True
             new_model_false[to_explore] = False
 
-            return (self._run(new_atoms, new_model_true) or
-                    self._run(new_atoms, new_model_false))
+            return (self._run(new_atoms, new_model_true, to_explore) or
+                    self._run(new_atoms, new_model_false, to_explore))
         else:
             return False
